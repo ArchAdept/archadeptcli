@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "archadeptcli"
-version = "1.0.1"
+version = "1.0.2"
 description = "Command line interface for building, running, debugging, and disassembling the ArchAdept training course example projects."
 authors = ["Ash Wilding <ash@archadept.com>"]
 homepage = "https://archadept.com/"
