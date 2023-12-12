@@ -23,6 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 # Standard deps
+import platform
 import shlex
 import shutil
 import subprocess
@@ -109,7 +110,11 @@ class DockerCLIWrapper():
         if capture:
             kwargs['stdout'] = subprocess.PIPE
             kwargs['stderr'] = subprocess.STDOUT
-        with subprocess.Popen(shlex.split(full_command), **kwargs) as p:
+        if platform.system() == 'Windows':
+            subprocess_command = full_command
+        else:
+            subprocess_command = shlex.split(full_command)
+        with subprocess.Popen(subprocess_command, **kwargs) as p:
             # Run the subprocess to completion. How we accomplish this depends
             # on whether we're capturing the subprocess's output or we directly
             # attached the host terminal's ``stdin``, ``stdout``, and ``stderr``.
