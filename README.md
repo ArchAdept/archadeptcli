@@ -1,4 +1,10 @@
-# archadeptcli
+# `archadeptcli` - ArchAdept Command Line Interface
+
+[![Operating Systems](https://img.shields.io/badge/os-linux%20%7C%20macOS%20%7C%20windows-yellow?style=for-the-badge)](https://github.com/ArchAdept/archadeptcli)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/archadeptcli?logo=python&logoColor=white&style=for-the-badge)](https://pypi.org/project/archadept-cli)
+[![PyPI](https://img.shields.io/pypi/v/archadeptcli?logo=pypi&color=green&logoColor=white&style=for-the-badge)](https://pypi.org/project/archadeptcli)
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/ArchAdept/archadeptcli?logo=github&color=orange&logoColor=white&style=for-the-badge)](https://github.com/ArchAdept/archadeptcli/releases)
+[![PyPI - License](https://img.shields.io/pypi/l/archadeptcli?color=03cb98&style=for-the-badge)](https://github.com/ArchAdept/archadeptcli/blob/main/LICENSE.md)
 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/archadeptcli?logo=python&logoColor=white&style=for-the-badge)](https://pypi.org/project/archadept-cli)
 [![PyPI](https://img.shields.io/pypi/v/archadeptcli?logo=pypi&color=green&logoColor=white&style=for-the-badge)](https://pypi.org/project/archadeptcli)
