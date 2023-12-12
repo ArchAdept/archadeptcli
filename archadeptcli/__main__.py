@@ -221,6 +221,25 @@ def main_make(image:str, tag:str, workdir:Path, target:str) -> int:
     result = DockerCLIWrapper().run(f'make {target}', image=image, tag=tag, host_workdir=workdir)
     return result.returncode
 
+def print_qemu_help_message(container_id:str=None) -> None:
+    """ Print the help message that is displayed when launching QEMU.
+
+    Parameters
+    ----------
+    container_id
+        If QEMU was instructed to spawn a GDB server then this is the ID of
+        the Docker container in which QEMU is running, else ``None``.
+    """
+    renderables = []
+    if container_id is not None:
+        renderables.append('Simulation is paused waiting for debugger.\n' \
+                               'Run this command in another window to attach the debugger:')
+        debug_panel = RichPanel.fit(f'$ archadept debug {container_id}', style='blue')
+        renderables.append(RichAlign.center(debug_panel))
+    renderables.append('Press \'Ctrl-a\' followed by \'x\' to end the simulation.\n' \
+                       'QEMU is now controlling this terminal window until the simulation ends...')
+    getConsole().print(RichPanel.fit(RichGroup(*renderables), style='green'))
+
 def main_run(image:str, tag:str, workdir:Path, spawn_gdbserver:bool) -> int:
     """ Main function for ``archadept run``.
 
@@ -244,22 +263,18 @@ def main_run(image:str, tag:str, workdir:Path, spawn_gdbserver:bool) -> int:
     qemu_cmdline = f'qemu-system-aarch64 -M raspi3b -nographic -kernel build/out.elf'
     if spawn_gdbserver:
         qemu_cmdline += ' -s -S'
-    result = docker.run(qemu_cmdline, detached=True, image=image, tag=tag, host_workdir=workdir)
+    else:
+        print_qemu_help_message()
+    result = docker.run(qemu_cmdline, detached=spawn_gdbserver, image=image, tag=tag, host_workdir=workdir)
+    if not spawn_gdbserver:
+        return result.returncode
     if result.returncode != 0:
         docker.error_cli_result(result)
         raise SimulationError('failed to start QEMU simulation')
     container_id = result.output
     if len(container_id) > 16:
         container_id = container_id[:16]
-    renderables = []
-    if spawn_gdbserver:
-        renderables.append('Simulation is paused waiting for debugger.\n' \
-                               'Run this command in another window to attach the debugger:')
-        debug_panel = RichPanel.fit(f'$ archadept debug {container_id}', style='blue')
-        renderables.append(RichAlign.center(debug_panel))
-    renderables.append('Press \'Ctrl-a\' followed by \'x\' to end the simulation.\n' \
-                       'QEMU is now controlling this terminal window until the simulation ends...')
-    console.print(RichPanel.fit(RichGroup(*renderables), style='green'))
+    print_qemu_help_message(container_id=container_id)
     return docker.attach(container_id).returncode
 
 def main_debug(container_id:str) -> int:
