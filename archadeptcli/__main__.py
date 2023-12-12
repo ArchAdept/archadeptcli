@@ -306,7 +306,7 @@ def main():
         if args.debug:
             raise e
         else:
-            getConsole.print(e)
+            getConsole().print(e)
             return 1
     except Exception as e:
         raise UngracefulExit('crashed due to uncaught exception') from e
