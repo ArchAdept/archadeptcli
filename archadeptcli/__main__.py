@@ -282,7 +282,7 @@ def main_prune() -> int:
 
     Returns
     -------
-    Shell exit status of the underlying sequence of calls to the Docker CLI.
+    Always returns 0; any issues will have raised an ``ArchAdeptError``.
     """
     DockerCLIWrapper().prune()
     return 0
