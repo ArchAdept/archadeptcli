@@ -37,6 +37,9 @@ from archadeptcli.console import getConsole, RichAlign, RichGroup, RichPanel
 from archadeptcli.docker import DockerCLIWrapper
 from archadeptcli.exceptions import *
 
+ARCHADEPTCLI_BASE_TAG = '1.0.2'
+""" Current base tag of the archadeptcli repository. """
+
 class CommandLineArgs():
     """ Class representing the arguments parsed from the command line. """
 
@@ -78,6 +81,16 @@ class CommandLineArgs():
                 },
             ),
             'args': (
+                {
+                    'arg': '-v',
+                    'top-level': True,
+                    'dict': {
+                        'dest': 'version',
+                        'help': 'display archadeptcli version info',
+                        'action': 'version',
+                        'version': f'archadeptcli-v{ARCHADEPTCLI_BASE_TAG}',
+                    },
+                },
                 {
                     'arg': '-D',
                     'top-level': True,
