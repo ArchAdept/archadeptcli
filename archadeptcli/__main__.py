@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 # Standard deps
 import argparse
+import tomllib
 from pathlib import Path
 from typing import Any, Optional
 
@@ -234,6 +235,39 @@ def main_make(image:str, tag:str, workdir:Path, target:str) -> int:
     result = DockerCLIWrapper().run(f'make {target}', image=image, tag=tag, host_workdir=workdir)
     return result.returncode
 
+def check_project_supports_run(project:Path) -> None:
+    """ Determines whether an ArchAdept example project supports being run on
+        a QEMU simulation of a Raspberry Pi 3b, printing a warning message if
+        it seems like it does not.
+
+    Parameters
+    ----------
+    project
+        Path to the project.
+    """
+    console = getConsole()
+    renderables = []
+    try:
+        toml_file = Path(project) / 'project.toml'
+        console.debug(f'trying to read project config file at \'{toml_file}\'...')
+        with open(toml_file, 'rb') as f:
+            d = tomllib.load(f)
+    except OSError as e:
+        console.debug(e)
+        renderables.append(f'Failed to open the project\'s \'project.toml\' file.')
+        renderables.append(f'Unable to determine whether this project supports running on QEMU.')
+    except tomllib.TOMLDecodeError as e:
+        console.debug(e)
+        renderables.append(f'Failed to parse the project\'s \'project.toml\' file.')
+        renderables.append(f'Unable to determine whether this project supports running on QEMU.')
+    else:
+        console.debug(d)
+        if 'archadeptcli' not in d or 'supports-run' not in d['archadeptcli'] or not d['archadeptcli']['supports-run']:
+            renderables.append(f'Project\'s \'project.toml\' file does not advertise support for running on QEMU.')
+    if renderables:
+        renderables.append(f'Attempting to continue, but this may fail or not work as expected...')
+        console.print(RichPanel.fit(RichGroup(*renderables), style='yellow'))
+
 def print_qemu_help_message(container_id:str=None) -> None:
     """ Print the help message that is displayed when launching QEMU.
 
@@ -273,6 +307,7 @@ def main_run(image:str, tag:str, workdir:Path, spawn_gdbserver:bool) -> int:
     """
     console = getConsole()
     docker = DockerCLIWrapper()
+    check_project_supports_run(workdir)
     qemu_cmdline = f'qemu-system-aarch64 -M raspi3b -nographic -kernel build/out.elf'
     if spawn_gdbserver:
         qemu_cmdline += ' -s -S'
