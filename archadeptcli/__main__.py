@@ -161,6 +161,16 @@ class CommandLineArgs():
                     },
                 },
                 {
+                    'arg': '-S',
+                    'top-level': False,
+                    'commands': ('make', ),
+                    'dict': {
+                        'dest': 'interleave',
+                        'help': 'Interleave source with disassembly (only available for \'dis\' target)',
+                        'action': 'store_true',
+                    },
+                },
+                {
                     'arg': 'container_id',
                     'top-level': False,
                     'commands': ('debug', ),
@@ -214,7 +224,11 @@ class CommandLineArgs():
                 v = Path(Path.cwd(), v)
             setattr(self, k, v)
 
-def main_make(image:str, tag:str, workdir:Path, target:str) -> int:
+        # Extra validation
+        if self.command == 'make' and self.interleave and not self.target == 'dis':
+            parser.error('-S only available for Makefile target \'dis\'')
+
+def main_make(image:str, tag:str, workdir:Path, target:str, interleave:bool=False) -> int:
     """ Main function for ``archadept make``.
 
     Parameters
@@ -227,12 +241,18 @@ def main_make(image:str, tag:str, workdir:Path, target:str) -> int:
         Path to the ArchAdept example project.
     target
         Makefile target.
+    interleave
+        When ``target='dis'``, this enables interleaving of source code with
+        the disassembly.
 
     Returns
     -------
     Shell exit status of the underlying ``make`` invocation.
     """
-    result = DockerCLIWrapper().run(f'make {target}', image=image, tag=tag, host_workdir=workdir)
+    kwargs = {}
+    if target == 'dis' and interleave:
+        kwargs['INTERLEAVE'] = 1
+    result = DockerCLIWrapper().run(f'make {target}', image=image, tag=tag, host_workdir=workdir, env=kwargs)
     return result.returncode
 
 def check_project_supports_run(project:Path) -> None:
@@ -356,7 +376,7 @@ def main():
     archadeptcli.console.init(debug=args.debug)
     try:
         if args.command == 'make':
-            return main_make(args.image, args.tag, args.workdir, args.target)
+            return main_make(args.image, args.tag, args.workdir, args.target, args.interleave)
         elif args.command == 'run':
             return main_run(args.image, args.tag, args.workdir, args.spawn_gdbserver)
         elif args.command == 'debug':
