@@ -209,7 +209,8 @@ class DockerCLIWrapper():
         capture:bool=False,
         image:str='archadept/example-code-tools',
         tag:str='latest',
-        host_workdir:Path=Path.cwd()
+        host_workdir:Path=Path.cwd(),
+        env:dict={},
     ) -> DockerCLIResult:
         """ Run a command in a new Docker container.
 
@@ -228,6 +229,9 @@ class DockerCLIWrapper():
             Docker image tag to use.
         host_workdir
             Host-side working directory to mount inside the Docker container.
+        env
+            Dictionary of environment variable key-value pairs that will be
+            exported to the Docker container.
 
         Returns
         -------
@@ -235,12 +239,14 @@ class DockerCLIWrapper():
         Docker CLI invocation and, if ``capture=True`` or ``detached=True``,
         its combined ``stdout`` and ``stderr`` output.
         """
-        full_command = f'run -it{"d" if detached else ""} --rm\n' \
-                       f'  -v "{host_workdir}:{self.guest_workdir}"\n' \
-                       f'  -w {self.guest_workdir}\n' \
-                       f'  --label {self.label}\n' \
-                       f'  {image}:{tag}\n' \
-                       f'  {command}\n'
+        full_command =      f'run -it{"d" if detached else ""} --rm\n' \
+                            f'  -v "{host_workdir}:{self.guest_workdir}"\n' \
+                            f'  -w {self.guest_workdir}\n' \
+                            f'  --label {self.label}\n'
+        for k,v in env.items():
+            full_command += f'  --env {k}={v}\n'
+        full_command +=     f'  {image}:{tag}\n' \
+                            f'  {command}\n'
         return self.invoke(full_command, capture=True if detached else capture)
 
     def attach(self, container_id:str, capture:bool=False) -> DockerCLIResult:
