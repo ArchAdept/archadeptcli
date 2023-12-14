@@ -162,6 +162,7 @@ command-specific options:
   -p PROJECT  path to the ArchAdept project (default: current directory)
   -i IMAGE    override Docker image repository (default: archadept/example-code-tools)
   -t TAG      override Docker image tag (default: latest)
+  -S          Interleave source with disassembly (only available for 'dis' target)
 
 command-specific positional arguments:
   TARGET      Makefile target from {all,clean,rebuild,dis,syms} (default: all)
@@ -169,11 +170,14 @@ command-specific positional arguments:
 
 The following targets are defined by all ArchAdept training course example
 project Makefiles:
- - `all` builds the project
- - `clean` deletes all of a project's build artifacts
- - `rebuild` performs a clean build, equivalent to `clean` followed by `all`
- - `dis` builds the project, then disassembles it
- - `syms` builds the project, then dumps its symbol table
+ - `all` builds the project.
+ - `clean` deletes all of a project's build artifacts.
+ - `rebuild` performs a clean build, equivalent to `clean` followed by `all`.
+ - `dis` builds the project, then disassembles it.
+ - `syms` builds the project, then dumps its symbol table.
+
+Note: The `dis` target accepts an optional `-S` flag, which enables interleaving
+source code with the disassembly.
 
 
 ### `run`
