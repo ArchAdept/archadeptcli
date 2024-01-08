@@ -61,7 +61,7 @@ class ArchAdeptError(Exception):
         else:
             s += f'See https://archadept.com/help/errors for more help with this error.'
         if not getConsole().debug_enabled:
-            s += f'\n\nNote: You can also rerun with `-D` for more verbose debug logging.'
+            s += f'\n\nNote: You can also rerun with `-v` for more verbose debug logging.'
         return s
 
 class UngracefulExit(ArchAdeptError):
