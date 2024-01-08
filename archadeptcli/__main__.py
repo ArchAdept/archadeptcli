@@ -83,7 +83,7 @@ class CommandLineArgs():
             ),
             'args': (
                 {
-                    'arg': '-v',
+                    'arg': '--version',
                     'top-level': True,
                     'dict': {
                         'dest': 'version',
@@ -93,11 +93,11 @@ class CommandLineArgs():
                     },
                 },
                 {
-                    'arg': '-D',
+                    'arg': '-v',
                     'top-level': True,
                     'dict': {
                         'dest': 'debug',
-                        'help': 'enable logging debug messages',
+                        'help': 'enable logging verbose debug messages',
                         'action': 'store_true',
                     },
                 },
@@ -171,6 +171,16 @@ class CommandLineArgs():
                     },
                 },
                 {
+                    'arg': '-D',
+                    'top-level': False,
+                    'commands': ('make', ),
+                    'dict': {
+                        'dest': 'disassemble_data',
+                        'help': 'Also disassemble any data found in code sections (only available for \'dis\' target)',
+                        'action': 'store_true',
+                    },
+                },
+                {
                     'arg': 'container_id',
                     'top-level': False,
                     'commands': ('debug', ),
@@ -225,10 +235,13 @@ class CommandLineArgs():
             setattr(self, k, v)
 
         # Extra validation
-        if self.command == 'make' and self.interleave and not self.target == 'dis':
-            parser.error('-S only available for Makefile target \'dis\'')
+        if self.command == 'make' and not self.target == 'dis':
+            if self.interleave:
+                parser.error('-S only available for Makefile target \'dis\'')
+            if self.disassemble_data:
+                parser.error('-D only available for Makefile target \'dis\'')
 
-def main_make(image:str, tag:str, workdir:Path, target:str, interleave:bool=False) -> int:
+def main_make(image:str, tag:str, workdir:Path, target:str, interleave:bool=False, disassemble_data=False) -> int:
     """ Main function for ``archadept make``.
 
     Parameters
@@ -244,14 +257,20 @@ def main_make(image:str, tag:str, workdir:Path, target:str, interleave:bool=Fals
     interleave
         When ``target='dis'``, this enables interleaving of source code with
         the disassembly.
+    disassemble_data
+        When ``target='dis'``, this enables disassembling any data found in
+        code sections.
 
     Returns
     -------
     Shell exit status of the underlying ``make`` invocation.
     """
     kwargs = {}
-    if target == 'dis' and interleave:
-        kwargs['INTERLEAVE'] = 1
+    if target == 'dis':
+        if interleave:
+            kwargs['INTERLEAVE'] = 1
+        if disassemble_data:
+            kwargs['DISASSEMBLE_DATA'] = 1
     result = DockerCLIWrapper().run(f'make {target}', image=image, tag=tag, host_workdir=workdir, env=kwargs)
     return result.returncode
 
@@ -376,7 +395,8 @@ def main():
     archadeptcli.console.init(debug=args.debug)
     try:
         if args.command == 'make':
-            return main_make(args.image, args.tag, args.workdir, args.target, args.interleave)
+            return main_make(args.image, args.tag, args.workdir, args.target,
+                             interleave=args.interleave, disassemble_data=args.disassemble_data)
         elif args.command == 'run':
             return main_run(args.image, args.tag, args.workdir, args.spawn_gdbserver)
         elif args.command == 'debug':

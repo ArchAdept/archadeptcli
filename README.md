@@ -150,19 +150,20 @@ The following commands are available:
 ### `make`
 
 ```console
-usage: archadept make [-h] [-D] [-p PROJECT] [-i IMAGE] [-t TAG] [TARGET]
+usage: archadept make [-h] [-v] [-p PROJECT] [-i IMAGE] [-t TAG] [TARGET]
 
 Invokes an ArchAdept example project Makefile.
 
 options:
   -h, --help  show this help message and exit
-  -D          enable logging debug messages
+  -v          enable logging verbose debug messages
 
 command-specific options:
   -p PROJECT  path to the ArchAdept project (default: current directory)
   -i IMAGE    override Docker image repository (default: archadept/example-code-tools)
   -t TAG      override Docker image tag (default: latest)
   -S          Interleave source with disassembly (only available for 'dis' target)
+  -D          Also disassemble any data found in code sections (only available for 'dis' target)
 
 command-specific positional arguments:
   TARGET      Makefile target from {all,clean,rebuild,dis,syms} (default: all)
@@ -177,20 +178,21 @@ project Makefiles:
  - `syms` builds the project, then dumps its symbol table.
  - `sects` builds the project, then dumps its section headers.
 
-Note: The `dis` target accepts an optional `-S` flag, which enables interleaving
-source code with the disassembly.
+Note: The `dis` target accepts the following optional flags:
+ - `-S` enables interleaving source code with the disassembly.
+ - `-D` enables disassembling any data found in code sections.
 
 
 ### `run`
 
 ```console
-usage: archadept run [-h] [-D] [-p PROJECT] [-i IMAGE] [-t TAG] [-s]
+usage: archadept run [-h] [-v] [-p PROJECT] [-i IMAGE] [-t TAG] [-s]
 
 Runs an ArchAdept example project on a simulated Raspberry Pi 3b using QEMU.
 
 options:
   -h, --help  show this help message and exit
-  -D          enable logging debug messages
+  -v          enable logging verbose debug messages
 
 command-specific options:
   -p PROJECT  path to the ArchAdept project (default: current directory)
@@ -205,13 +207,13 @@ To quit the QEMU simulation, press `Ctrl-a` followed by `x`.
 ### `debug`
 
 ```console
-usage: archadept debug [-h] [-D] CONTAINER
+usage: archadept debug [-h] [-v] CONTAINER
 
 Attaches a GDB debug session to a live QEMU simulation started by `archadept run`.
 
 options:
   -h, --help  show this help message and exit
-  -D          enable logging debug messages
+  -v          enable logging verbose debug messages
 
 command-specific positional arguments:
   CONTAINER   container in which the QEMU simulation is running, as given by `archadept run`
@@ -221,12 +223,12 @@ command-specific positional arguments:
 ### `prune`
 
 ```console
-usage: archadept prune [-h] [-D]
+usage: archadept prune [-h] [-v]
 
 Cleans up any lingering Docker containers from previous ArchAdept CLI invocations.
 
 options:
   -h, --help  show this help message and exit
-  -D          enable logging debug messages
+  -v          enable logging verbose debug messages
 ```
 
