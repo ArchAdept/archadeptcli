@@ -175,6 +175,7 @@ project Makefiles:
  - `rebuild` performs a clean build, equivalent to `clean` followed by `all`.
  - `dis` builds the project, then disassembles it.
  - `syms` builds the project, then dumps its symbol table.
+ - `sects` builds the project, then dumps its section headers.
 
 Note: The `dis` target accepts an optional `-S` flag, which enables interleaving
 source code with the disassembly.

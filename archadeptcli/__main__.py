@@ -155,7 +155,7 @@ class CommandLineArgs():
                         'metavar': 'TARGET',
                         'help': 'Makefile target from {all,clean,rebuild,dis,syms} (default: all)',
                         'type': str,
-                        'choices': ('all', 'clean', 'rebuild', 'dis', 'syms'),
+                        'choices': ('all', 'clean', 'rebuild', 'dis', 'syms', 'sects'),
                         'default': 'all',
                         'nargs': '?',
                     },
