@@ -166,7 +166,7 @@ class CommandLineArgs():
                     'commands': ('make', ),
                     'dict': {
                         'dest': 'interleave',
-                        'help': 'Interleave source with disassembly (only available for \'dis\' target)',
+                        'help': 'interleave source with disassembly (only available for \'dis\' target)',
                         'action': 'store_true',
                     },
                 },
@@ -176,8 +176,20 @@ class CommandLineArgs():
                     'commands': ('make', ),
                     'dict': {
                         'dest': 'disassemble_data',
-                        'help': 'Also disassemble any data found in code sections (only available for \'dis\' target)',
+                        'help': 'also disassemble any data found in code sections (only available for \'dis\' target)',
                         'action': 'store_true',
+                    },
+                },
+                {
+                    'arg': '-O',
+                    'top-level': False,
+                    'commands': ('make', ),
+                    'dict': {
+                        'dest': 'optimize',
+                        'help': 'set compiler optimization level (only available for \'all\' and \'rebuild\' targets)',
+                        'type': int,
+                        'choices': range(4),
+                        'default': None,
                     },
                 },
                 {
@@ -235,13 +247,17 @@ class CommandLineArgs():
             setattr(self, k, v)
 
         # Extra validation
-        if self.command == 'make' and not self.target == 'dis':
-            if self.interleave:
-                parser.error('-S only available for Makefile target \'dis\'')
-            if self.disassemble_data:
-                parser.error('-D only available for Makefile target \'dis\'')
+        if self.command == 'make':
+            if self.target != 'dis':
+                if self.interleave:
+                    parser.error('-S only available for Makefile target \'dis\'')
+                if self.disassemble_data:
+                    parser.error('-D only available for Makefile target \'dis\'')
+            if self.target not in ('all', 'rebuild'):
+                if self.optimize is not None:
+                    parser.error('-O only available for Makefile targets {\'all\', \'rebuild\'}')
 
-def main_make(image:str, tag:str, workdir:Path, target:str, interleave:bool=False, disassemble_data=False) -> int:
+def main_make(image:str, tag:str, workdir:Path, target:str, interleave:bool=False, disassemble_data:bool=False, optimize:Optional[int]=None) -> int:
     """ Main function for ``archadept make``.
 
     Parameters
@@ -260,6 +276,11 @@ def main_make(image:str, tag:str, workdir:Path, target:str, interleave:bool=Fals
     disassemble_data
         When ``target='dis'``, this enables disassembling any data found in
         code sections.
+    optimize
+        When ``target={all,rebuild}``, this sets the compiler's optimization
+        level, for example if ``optimize=1`` then ``-O1`` will be added to
+        the compiler flags. If ``optimize=None`` then the ``-O`` flag will
+        be entirely omitted.
 
     Returns
     -------
@@ -271,6 +292,9 @@ def main_make(image:str, tag:str, workdir:Path, target:str, interleave:bool=Fals
             kwargs['INTERLEAVE'] = 1
         if disassemble_data:
             kwargs['DISASSEMBLE_DATA'] = 1
+    elif target in ('all', 'rebuild'):
+        if optimize is not None:
+            kwargs['OPTIMIZE'] = optimize
     result = DockerCLIWrapper().run(f'make {target}', image=image, tag=tag, host_workdir=workdir, env=kwargs)
     return result.returncode
 
@@ -396,7 +420,8 @@ def main():
     try:
         if args.command == 'make':
             return main_make(args.image, args.tag, args.workdir, args.target,
-                             interleave=args.interleave, disassemble_data=args.disassemble_data)
+                             interleave=args.interleave, disassemble_data=args.disassemble_data,
+                             optimize=args.optimize)
         elif args.command == 'run':
             return main_run(args.image, args.tag, args.workdir, args.spawn_gdbserver)
         elif args.command == 'debug':
