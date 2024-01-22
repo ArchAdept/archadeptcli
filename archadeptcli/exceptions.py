@@ -94,6 +94,11 @@ class SimulationError(ArchAdeptError):
     unique_id = 0xEDC4
     is_bug = False
 
+class DockerContainerError(ArchAdeptError):
+    """ Raised when a Docker container does not have the expected attributes. """
+    unique_id = 0xEDC5
+    is_bug = False
+
 __all__ = [
     'ArchAdeptError',
     'UngracefulExit',

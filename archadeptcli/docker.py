@@ -23,6 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 # Standard deps
+import json
 import platform
 import shlex
 import shutil
@@ -305,4 +306,42 @@ class DockerCLIWrapper():
         if result.returncode != 0:
             self.error_cli_result(result)
             raise DockerServerError('failed to remove Docker containers')
+
+    def get_project_dir(self, container_id:str) -> Path:
+        """ Get the host-side path to the ArchAdept example project directory
+            mounted inside a running Docker container.
+
+        Parameters
+        ----------
+        container_id
+            ID of the Docker container to attach to.
+
+        Returns
+        -------
+        Path to the host-side ArchAdept example project directory.
+        """
+        result = self.invoke(f'container inspect {container_id}', capture=True)
+        if result.returncode != 0:
+            self.error_cli_result(result)
+            raise DockerServerError('failed to inspect container')
+        try:
+            data = json.loads(result.output.strip())
+        except json.decoder.JSONDecodeError as e:
+            self.error_cli_result(result)
+            raise DockerServerError('malformed Docker server response: expected valid JSON')
+        if not isinstance(data, list) or len(data) != 1:
+            self.error_cli_result(result)
+            raise DockerServerError('malformed Docker server response: expected a list of length 1')
+        if 'HostConfig' not in data[0] or 'Binds' not in data[0]['HostConfig']:
+            self.error_cli_result(result)
+            raise DockerServerError('malformed Docker server response: JSON missing [HostConfig][Binds] key')
+        binds = data[0]['HostConfig']['Binds']
+        if not isinstance(binds, list) or len(data) < 1:
+            self.error_cli_result(result)
+            raise DockerContainerError('container has no directories mounted in it')
+        workdir = '/mnt/archadept-workdir'
+        for bind in binds:
+            if bind.endswith(workdir):
+                return Path(bind[:-len(workdir)-1])
+        raise DockerContainerError(f'container has no directory mounted at {workdir}')
 
