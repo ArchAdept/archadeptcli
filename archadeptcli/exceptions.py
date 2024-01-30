@@ -105,6 +105,7 @@ __all__ = [
     'InternalError',
     'DockerNotFound',
     'DockerEngineNotRunning',
+    'DockerServerError',
     'SimulationError',
 ]
 
