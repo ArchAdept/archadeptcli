@@ -254,7 +254,7 @@ class CommandLineArgs():
                 if self.disassemble_data:
                     parser.error('-D only available for Makefile target \'dis\'')
 
-def main_make(image:str, tag:str, workdir:Path, target:str, optimize:int, interleave:bool=False, disassemble_data:bool=False) -> int:
+def main_make(image:str, tag:str, workdir:Path, target:str, optimize:Optional[int]=None, interleave:bool=False, disassemble_data:bool=False) -> int:
     """ Main function for ``archadept make``.
 
     Parameters
@@ -362,6 +362,9 @@ def main_run(image:str, tag:str, workdir:Path, spawn_gdbserver:bool) -> int:
     """
     console = getConsole()
     docker = DockerCLIWrapper()
+    returncode = main_make(image, tag, workdir, 'rebuild', None)
+    if returncode != 0:
+        return returncode
     check_project_supports_run(workdir)
     qemu_cmdline = f'qemu-system-aarch64 -M raspi3b -nographic -kernel build/out.elf'
     if spawn_gdbserver:
@@ -414,7 +417,7 @@ def main():
     archadeptcli.console.init(debug=args.debug)
     try:
         if args.command == 'make':
-            return main_make(args.image, args.tag, args.workdir, args.target, args.optimize,
+            return main_make(args.image, args.tag, args.workdir, args.target, optimize=args.optimize,
                              interleave=args.interleave, disassemble_data=args.disassemble_data)
         elif args.command == 'run':
             return main_run(args.image, args.tag, args.workdir, args.spawn_gdbserver)
