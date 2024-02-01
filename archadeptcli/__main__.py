@@ -186,10 +186,10 @@ class CommandLineArgs():
                     'commands': ('make', ),
                     'dict': {
                         'dest': 'optimize',
-                        'help': 'set compiler optimization level (default: 1)',
+                        'help': 'override project\'s default optimization level',
                         'type': int,
                         'choices': range(4),
-                        'default': 1,
+                        'default': None,
                     },
                 },
                 {
@@ -281,6 +281,8 @@ def main_make(image:str, tag:str, workdir:Path, target:str, optimize:Optional[in
     Shell exit status of the underlying ``make`` invocation.
     """
     kwargs = {}
+    if optimize is None:
+        optimize = get_project_default_optimization_level(workdir)
     kwargs['OPTIMIZE'] = optimize
     if target == 'dis':
         if interleave:
@@ -289,6 +291,31 @@ def main_make(image:str, tag:str, workdir:Path, target:str, optimize:Optional[in
             kwargs['DISASSEMBLE_DATA'] = 1
     result = DockerCLIWrapper().run(f'make {target}', image=image, tag=tag, host_workdir=workdir, env=kwargs)
     return result.returncode
+
+def get_project_metadata(project:Path) -> Optional[dict]:
+    """ Attempt to parse the project's `archadeptcli.toml` config file.
+
+    Parameters
+    ----------
+    project
+        Path to the project.
+    """
+    console = getConsole()
+    try:
+        toml_file = Path(project) / 'archadeptcli.toml'
+        console.debug(f'trying to read project config file at \'{toml_file}\'...')
+        with open(toml_file, 'rb') as f:
+            d = tomllib.load(f)
+    except OSError as e:
+        console.debug(e)
+        console.debug(f'Failed to open the project\'s \'archadeptcli.toml\' file.')
+        return None
+    except tomllib.TOMLDecodeError as e:
+        console.debug(e)
+        console.debug(f'Failed to parse the project\'s \'archadeptcli.toml\' file.')
+        return None
+    else:
+        return d
 
 def check_project_supports_run(project:Path) -> None:
     """ Determines whether an ArchAdept example project supports being run on
@@ -302,26 +329,35 @@ def check_project_supports_run(project:Path) -> None:
     """
     console = getConsole()
     renderables = []
-    try:
-        toml_file = Path(project) / 'project.toml'
-        console.debug(f'trying to read project config file at \'{toml_file}\'...')
-        with open(toml_file, 'rb') as f:
-            d = tomllib.load(f)
-    except OSError as e:
-        console.debug(e)
-        renderables.append(f'Failed to open the project\'s \'project.toml\' file.')
+    metadata = get_project_metadata(project)
+    if metadata is None:
         renderables.append(f'Unable to determine whether this project supports running on QEMU.')
-    except tomllib.TOMLDecodeError as e:
-        console.debug(e)
-        renderables.append(f'Failed to parse the project\'s \'project.toml\' file.')
-        renderables.append(f'Unable to determine whether this project supports running on QEMU.')
-    else:
-        console.debug(d)
-        if 'archadeptcli' not in d or 'supports-run' not in d['archadeptcli'] or not d['archadeptcli']['supports-run']:
-            renderables.append(f'Project\'s \'project.toml\' file does not advertise support for running on QEMU.')
+    elif 'supports-run' not in metadata or not metadata['supports-run']:
+        renderables.append(f'Project\'s \'archadeptcli.toml\' file does not advertise support for running on QEMU.')
     if renderables:
         renderables.append(f'Attempting to continue, but this may fail or not work as expected...')
         console.print(RichPanel.fit(RichGroup(*renderables), style='yellow'))
+
+def get_project_default_optimization_level(project:Path) -> int:
+    """ Get the default compilation optimization level for a project.
+        This defaults to `-O1` if the project's `archadeptcli.toml`
+        file cannot be found, cannot be parsed, or does not contain a
+        valid `optimize` key.
+
+    Parameters
+    ----------
+    project
+        Path to the project.
+
+    Returns
+    -------
+    The default compilation optimization level.
+    """
+    optimize = 1
+    metadata = get_project_metadata(project)
+    if metadata is not None and 'optimize' in metadata and isinstance(metadata['optimize'], int):
+        optimize = metadata['optimize']
+    return optimize
 
 def print_qemu_help_message(container_id:str=None) -> None:
     """ Print the help message that is displayed when launching QEMU.
