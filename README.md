@@ -159,11 +159,12 @@ options:
   -v          enable logging verbose debug messages
 
 command-specific options:
-  -p PROJECT  path to the ArchAdept project (default: current directory)
-  -i IMAGE    override Docker image repository (default: archadept/example-code-tools)
-  -t TAG      override Docker image tag (default: latest)
-  -S          Interleave source with disassembly (only available for 'dis' target)
-  -D          Also disassemble any data found in code sections (only available for 'dis' target)
+  -p PROJECT    path to the ArchAdept project (default: current directory)
+  -i IMAGE      override Docker image repository (default: archadept/example-code-tools)
+  -t TAG        override Docker image tag (default: latest)
+  -S            interleave source with disassembly (only available for 'dis' target)
+  -D            also disassemble any data found in code sections (only available for 'dis' target)
+  -O {0,1,2,3}  override project's default optimization level
 
 command-specific positional arguments:
   TARGET      Makefile target from {all,clean,rebuild,dis,syms} (default: all)
