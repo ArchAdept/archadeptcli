@@ -57,7 +57,7 @@ class DockerCLIWrapper():
     def __init__(self):
         """ Constructor. """
 
-        self.guest_workdir:Path = Path('/mnt/archadept-workdir')
+        self.guest_workdir:Path = Path('/mnt/archadept-workdir').as_posix()
         """ Where to mount the host-side working directory inside any spawned
             Docker containers. """
 
@@ -112,7 +112,7 @@ class DockerCLIWrapper():
             kwargs['stdout'] = subprocess.PIPE
             kwargs['stderr'] = subprocess.STDOUT
         if platform.system() == 'Windows':
-            subprocess_command = full_command
+            subprocess_command = full_command.replace('\n', ' ')
         else:
             subprocess_command = shlex.split(full_command)
         with subprocess.Popen(subprocess_command, **kwargs) as p:
