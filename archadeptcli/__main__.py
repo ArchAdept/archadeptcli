@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 # Standard deps
 import argparse
-import tomllib
+import json
 from pathlib import Path
 from typing import Any, Optional
 
@@ -293,7 +293,7 @@ def main_make(image:str, tag:str, workdir:Path, target:str, optimize:Optional[in
     return result.returncode
 
 def get_project_metadata(project:Path) -> Optional[dict]:
-    """ Attempt to parse the project's `archadeptcli.toml` config file.
+    """ Attempt to parse the project's `archadeptcli.json` config file.
 
     Parameters
     ----------
@@ -302,20 +302,20 @@ def get_project_metadata(project:Path) -> Optional[dict]:
     """
     console = getConsole()
     try:
-        toml_file = Path(project) / 'archadeptcli.toml'
-        console.debug(f'trying to read project config file at \'{toml_file}\'...')
-        with open(toml_file, 'rb') as f:
-            d = tomllib.load(f)
+        config_file = Path(project) / 'archadeptcli.json'
+        console.debug(f'trying to read project config file at \'{config_file}\'...')
+        with open(config_file, 'r') as f:
+            ret = json.load(f)
     except OSError as e:
         console.debug(e)
-        console.debug(f'Failed to open the project\'s \'archadeptcli.toml\' file.')
+        console.debug(f'Failed to open the project\'s \'archadeptcli.json\' file.')
         return None
-    except tomllib.TOMLDecodeError as e:
+    except json.decoder.JSONDecodeError as e:
         console.debug(e)
-        console.debug(f'Failed to parse the project\'s \'archadeptcli.toml\' file.')
+        console.debug(f'Failed to parse the project\'s \'archadeptcli.json\' file.')
         return None
     else:
-        return d
+        return ret
 
 def check_project_supports_run(project:Path) -> None:
     """ Determines whether an ArchAdept example project supports being run on
@@ -336,7 +336,7 @@ def check_project_supports_run(project:Path) -> None:
 
 def get_project_default_optimization_level(project:Path) -> int:
     """ Get the default compilation optimization level for a project.
-        This defaults to `-O1` if the project's `archadeptcli.toml`
+        This defaults to `-O1` if the project's `archadeptcli.json`
         file cannot be found, cannot be parsed, or does not contain a
         valid `optimize` key.
 
