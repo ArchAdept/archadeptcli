@@ -328,15 +328,11 @@ def check_project_supports_run(project:Path) -> None:
         Path to the project.
     """
     console = getConsole()
-    renderables = []
     metadata = get_project_metadata(project)
     if metadata is None:
-        renderables.append(f'Unable to determine whether this project supports running on QEMU.')
+        ProjectRunSupportUnknown(f'Unable to determine whether this project supports being run on QEMU.')
     elif 'supports-run' not in metadata or not metadata['supports-run']:
-        renderables.append(f'Project\'s \'archadeptcli.toml\' file does not advertise support for running on QEMU.')
-    if renderables:
-        renderables.append(f'Attempting to continue, but this may fail or not work as expected...')
-        console.print(RichPanel.fit(RichGroup(*renderables), style='yellow'))
+        ProjectDoesNotSupportRun(f'Project config file states it does not support being run on QEMU.')
 
 def get_project_default_optimization_level(project:Path) -> int:
     """ Get the default compilation optimization level for a project.
@@ -467,7 +463,7 @@ def main():
         if args.debug:
             raise e
         else:
-            getConsole().print(e)
+            e.render()
             return 1
     except Exception as e:
         raise UngracefulExit('crashed due to uncaught exception') from e
