@@ -38,7 +38,7 @@ from archadeptcli.console import getConsole, RichAlign, RichGroup, RichPanel
 from archadeptcli.docker import DockerCLIWrapper
 from archadeptcli.exceptions import *
 
-ARCHADEPTCLI_BASE_TAG = '1.1.4'
+ARCHADEPTCLI_BASE_TAG = '1.1.5'
 """ Current base tag of the archadeptcli repository. """
 
 class CommandLineArgs():
