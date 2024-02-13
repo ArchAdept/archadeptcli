@@ -32,10 +32,13 @@ the actual Docker containers themselves.
 ## Installation
 
 Tested as working on:
- - macOS Sonoma 14.1
- - **TODO** Windows 10
- - **TODO** Windows 11
- - **TODO** Ubuntu 22.04 LTS
+
+| Operating System  | x86_64 | arm64 |
+| ----------------- | ------ | ----- |
+| macOS Sonoma 14.1 | TODO   | 🟢    |
+| Windows 10        | TODO   | N/A   |
+| Windows 11        | TODO   | TODO  |
+| Ubuntu 22.04 LTS  | 🟢     | TODO  |
 
 
 ### macOS
