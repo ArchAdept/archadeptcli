@@ -82,7 +82,7 @@ class DockerCLIWrapper():
         ----------
         command
             The command to invoke, sans the leading ``docker``.
-              Example: ``run archadept/example-code-tools:latest gcc -dumpmachine``
+              Example: ``run archadept/archadeptcli-backend:latest clang -dumpmachine``
         capture
             The default behavior with ``capture=False`` is to directly attach the
             host terminal's ``stdin``, ``stdout``, and ``stderr`` to the subprocess
@@ -208,7 +208,7 @@ class DockerCLIWrapper():
         command:str,
         detached:bool=False,
         capture:bool=False,
-        image:str='archadept/example-code-tools',
+        image:str='archadept/archadeptcli-backend',
         tag:str='latest',
         host_workdir:Path=Path.cwd(),
         env:dict={},

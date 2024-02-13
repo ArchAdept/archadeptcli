@@ -120,9 +120,9 @@ class CommandLineArgs():
                     'dict': {
                         'metavar': 'IMAGE',
                         'dest': 'image',
-                        'help': 'override Docker image repository (default: archadept/example-code-tools)',
+                        'help': 'override Docker image repository (default: archadept/archadeptcli-backend)',
                         'type': str,
-                        'default': 'archadept/example-code-tools',
+                        'default': 'archadept/archadeptcli-backend',
                     },
                 },
                 {
@@ -428,10 +428,8 @@ def main_debug(container_id:str) -> int:
     Shell exit status of the underlying GDB invocation.
     """
     docker = DockerCLIWrapper()
-    gdb_command = 'aarch64-none-elf-gdb -q -ex \'target remote localhost:1234\' -ex \'set prompt \\n(gdb) \' build/out.elf'
-    if Path.exists(docker.get_project_dir(container_id) / 'gdb-commands.py'):
-        gdb_command += ' -x \'gdb-commands.py\''
-    return docker.exec(container_id, gdb_command).returncode
+    lldb_command = 'lldb -Q --one-line \'gdb-remote localhost:1234\' build/out.elf'
+    return docker.exec(container_id, lldb_command).returncode
 
 def main_prune() -> int:
     """ Main function for ``archadept prune``.

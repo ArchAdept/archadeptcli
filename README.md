@@ -160,7 +160,7 @@ options:
 
 command-specific options:
   -p PROJECT    path to the ArchAdept project (default: current directory)
-  -i IMAGE      override Docker image repository (default: archadept/example-code-tools)
+  -i IMAGE      override Docker image repository (default: archadept/archadeptcli-backend)
   -t TAG        override Docker image tag (default: latest)
   -S            interleave source with disassembly (only available for 'dis' target)
   -D            also disassemble any data found in code sections (only available for 'dis' target)
@@ -197,7 +197,7 @@ options:
 
 command-specific options:
   -p PROJECT  path to the ArchAdept project (default: current directory)
-  -i IMAGE    override Docker image repository (default: archadept/example-code-tools)
+  -i IMAGE    override Docker image repository (default: archadept/archadeptcli-backend)
   -t TAG      override Docker image tag (default: latest)
   -s          spawn GDB debug server and pause simulation at kernel entrypoint
 ```
