@@ -1,9 +1,10 @@
 # `archadeptcli` - ArchAdept Command Line Interface
 
-[![Operating Systems](https://img.shields.io/badge/os-linux%20%7C%20macOS%20%7C%20windows-yellow?style=for-the-badge)](https://github.com/ArchAdept/archadeptcli)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/archadeptcli?logo=python&logoColor=white&style=for-the-badge)](https://pypi.org/project/archadept-cli)
 [![PyPI](https://img.shields.io/pypi/v/archadeptcli?logo=pypi&color=green&logoColor=white&style=for-the-badge)](https://pypi.org/project/archadeptcli)
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/ArchAdept/archadeptcli?logo=github&color=orange&logoColor=white&style=for-the-badge)](https://github.com/ArchAdept/archadeptcli/releases)
+[![Operating Systems](https://img.shields.io/badge/os-linux%20%7C%20macOS%20%7C%20windows-yellow?style=for-the-badge)](https://github.com/ArchAdept/archadeptcli)
+[![Architectures](https://img.shields.io/badge/arch-x86__64%20%7C%20arm64-purple?style=for-the-badge)](https://github.com/ArchAdept/archadeptcli)
 [![PyPI - License](https://img.shields.io/pypi/l/archadeptcli?color=03cb98&style=for-the-badge)](https://github.com/ArchAdept/archadeptcli/blob/main/LICENSE.md)
 
 Command line interface for building, running, debugging, and disassembling the
@@ -70,6 +71,11 @@ $ pipx install archadeptcli
 $ archadept --help
 ```
 
+8. To upgrade the ArchAdept CLI in future:
+```console
+$ pipx upgrade archadeptcli
+```
+
 
 ### Windows
 
@@ -99,6 +105,11 @@ PS> py -3 -m pipx install archadeptcli
 PS> archadept --help
 ```
 
+8. To upgrade the ArchAdept CLI in future:
+```console
+PS> py -3 -m pipx upgrade archadeptcli
+```
+
 
 ### Linux
 
@@ -119,23 +130,28 @@ $ sudo apt upgrade python3
 
 4. Install `pipx` via `pip`:
 ```console
-python3 -m pip install --user pipx
+$ python3 -m pip install --user pipx
 ```
 
 5. Let `pipx` correctly update your `$PATH`:
 ```console
-python3 -m pipx ensurepath
+$ python3 -m pipx ensurepath
 ```
 
 6. From a new terminal window, install the ArchAdept CLI via `pipx`:
 ```console
 # From a new terminal window!
-python3 -m pipx install archadeptcli
+$ python3 -m pipx install archadeptcli
 ```
 
 7. Ensure the ArchAdept CLI is installed and accessible:
 ```console
-archadept --help
+$ archadept --help
+```
+
+8. To upgrade the ArchAdept CLI in future:
+```console
+$ python3 -m pipx upgrade archadeptcli
 ```
 
 ## Usage
