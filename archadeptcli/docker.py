@@ -291,6 +291,22 @@ class DockerCLIWrapper():
                        f'  {command}'
         return self.invoke(full_command)
 
+    def pull(self, image:str, tag:str) -> int:
+        """ Pull the latest Docker image from DockerHub.
+
+        Parameters
+        ----------
+        image
+            Docker image repository to use.
+        tag
+            Docker image tag to use.
+
+        Returns
+        -------
+        The shell exit status of the underlying ``docker pull` invocation.
+        """
+        return self.invoke(f'pull {image}:{tag}').returncode
+
     def prune(self) -> None:
         """ Prune any lingering Docker containers that we may have failed to
             cleanup on previous runs. """

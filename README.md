@@ -71,7 +71,12 @@ $ pipx install archadeptcli
 $ archadept --help
 ```
 
-8. To upgrade the ArchAdept CLI in future:
+8. Pull the latest ArchAdept CLI backend Docker image now, to speed up future invocations:
+```console
+$ archadept pull
+```
+
+9. To upgrade the ArchAdept CLI in future:
 ```console
 $ pipx upgrade archadeptcli
 ```
@@ -103,6 +108,11 @@ PS> py -3 -m pipx install archadeptcli
 6. Ensure the ArchAdept CLI is installed and accessible:
 ```console
 PS> archadept --help
+```
+
+7. Pull the latest ArchAdept CLI backend Docker image now, to speed up future invocations:
+```console
+PS> archadept pull
 ```
 
 8. To upgrade the ArchAdept CLI in future:
@@ -149,7 +159,12 @@ $ python3 -m pipx install archadeptcli
 $ archadept --help
 ```
 
-8. To upgrade the ArchAdept CLI in future:
+8. Pull the latest ArchAdept CLI backend Docker image now, to speed up future invocations:
+```console
+$ archadept pull
+```
+
+9. To upgrade the ArchAdept CLI in future:
 ```console
 $ python3 -m pipx upgrade archadeptcli
 ```
@@ -160,6 +175,7 @@ The following commands are available:
  - `make`
  - `run`
  - `debug`
+ - `pull`
  - `prune`
 
 
@@ -234,6 +250,24 @@ options:
 
 command-specific positional arguments:
   CONTAINER   container in which the QEMU simulation is running, as given by `archadept run`
+```
+
+
+### `pull`
+
+```console
+usage: archadept pull [-h] [--version] [-v] [-i IMAGE] [-t TAG]
+
+Pulls the latest ArchAdept CLI backend Docker image from DockerHub.
+
+options:
+  -h, --help  show this help message and exit
+  --version   display archadeptcli version info
+  -v          enable logging verbose debug messages
+
+command-specific options:
+  -i IMAGE    override Docker image repository (default: archadept/archadeptcli-backend)
+  -t TAG      override Docker image tag (default: latest)
 ```
 
 

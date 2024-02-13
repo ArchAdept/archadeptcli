@@ -167,5 +167,6 @@ __all__ = [
     'DockerEngineNotRunning',
     'DockerServerError',
     'SimulationError',
+    'DockerContainerError',
 ]
 

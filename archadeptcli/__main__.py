@@ -70,7 +70,14 @@ class CommandLineArgs():
                     'command': 'debug',
                     'dict': {
                         'help': 'attach debugger to live simulation',
-                        'description': 'Attaches a GDB debug session to a live QEMU simulation started by `archadept run`.',
+                        'description': 'Attaches an LLDB debug session to a live QEMU simulation started by `archadept run`.',
+                    },
+                },
+                {
+                    'command': 'pull',
+                    'dict': {
+                        'help': 'pull the latest Docker image',
+                        'description': 'Pulls the latest ArchAdept CLI backend Docker image from DockerHub.',
                     },
                 },
                 {
@@ -116,7 +123,7 @@ class CommandLineArgs():
                 {
                     'arg': '-i',
                     'top-level': False,
-                    'commands': ('make', 'run'),
+                    'commands': ('make', 'run', 'pull', ),
                     'dict': {
                         'metavar': 'IMAGE',
                         'dest': 'image',
@@ -128,7 +135,7 @@ class CommandLineArgs():
                 {
                     'arg': '-t',
                     'top-level': False,
-                    'commands': ('make', 'run'),
+                    'commands': ('make', 'run', 'pull', ),
                     'dict': {
                         'metavar': 'TAG',
                         'dest': 'tag',
@@ -425,11 +432,27 @@ def main_debug(container_id:str) -> int:
 
     Returns
     -------
-    Shell exit status of the underlying GDB invocation.
+    Shell exit status of the underlying LLDB invocation.
     """
     docker = DockerCLIWrapper()
     lldb_command = 'lldb -Q --one-line \'gdb-remote localhost:1234\' build/out.elf'
     return docker.exec(container_id, lldb_command).returncode
+
+def main_pull(image:str, tag:str) -> int:
+    """ Main function for ``archadept pull``.
+
+    Parameters
+    ----------
+    image
+        Docker image repository to use.
+    tag
+        Docker image tag to use.
+
+    Returns
+    -------
+    Shell exit status of the underlying ``docker pull` invocation.
+    """
+    return DockerCLIWrapper().pull(image, tag)
 
 def main_prune() -> int:
     """ Main function for ``archadept prune``.
@@ -453,6 +476,8 @@ def main():
             return main_run(args.image, args.tag, args.workdir, args.spawn_gdbserver)
         elif args.command == 'debug':
             return main_debug(args.container_id)
+        elif args.command == 'pull':
+            return main_pull(args.image, args.tag)
         elif args.command == 'prune':
             return main_prune()
         else:
