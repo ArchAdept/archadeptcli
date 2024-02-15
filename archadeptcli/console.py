@@ -30,6 +30,14 @@ from rich.align import Align as RichAlign
 from rich.console import Console as RichConsole, Group as RichGroup
 from rich.panel import Panel as RichPanel
 
+class Color():
+    """ Color code mappings so that we pickup the user's own color palette. """
+    DEBUG   = 'color(7)'  # SILVER
+    INFO    = 'color(2)'  # GREEN
+    WARNING = 'color(3)'  # OLIVE
+    ERROR   = 'color(1)'  # RED
+    EXTRA   = 'color(6)'  # TEAL
+
 class Console():
     """ Wrapper around upstream Rich Console used for all textual output. """
 
@@ -94,5 +102,6 @@ __all__ = [
     'RichConsole',
     'RichGroup',
     'RichPanel',
+    'Color',
 ]
 

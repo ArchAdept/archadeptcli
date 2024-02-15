@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import Optional
 
 # Local deps
-from .console import getConsole, RichGroup, RichPanel
+from .console import getConsole, RichGroup, RichPanel, Color
 from .exceptions import *
 
 @dataclass
@@ -104,7 +104,7 @@ class DockerCLIWrapper():
         its captured and combined ``stdout`` plus ``stderr``, else ``None``.
         """
         full_command = f'{self.docker_cli_binary} {command}'.rstrip()
-        getConsole().debug(RichPanel.fit(full_command, style='white', title='invoking command...'))
+        getConsole().debug(RichPanel.fit(full_command, style=Color.DEBUG, title='invoking command...'))
         # Spawn the subprocess with appropriate piping.
         output = None
         kwargs = {'text':True, 'encoding':'UTF-8'}
@@ -152,7 +152,7 @@ class DockerCLIWrapper():
                     RichPanel.fit(
                         result.command,
                         title='command',
-                        style='blue',
+                        style=Color.EXTRA,
                     ),
                     RichPanel(
                         result.output,

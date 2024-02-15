@@ -34,7 +34,7 @@ rich.traceback.install(show_locals=True, suppress=[rich])
 
 # Local deps
 import archadeptcli
-from archadeptcli.console import getConsole, RichAlign, RichGroup, RichPanel
+from archadeptcli.console import getConsole, RichAlign, RichGroup, RichPanel, Color
 from archadeptcli.docker import DockerCLIWrapper
 from archadeptcli.exceptions import *
 
@@ -358,11 +358,11 @@ def print_qemu_help_message(container_id:str=None) -> None:
     if container_id is not None:
         renderables.append('Simulation is paused waiting for debugger.\n' \
                                'Run this command in another window to attach the debugger:')
-        debug_panel = RichPanel.fit(f'$ archadept debug {container_id}', style='blue')
+        debug_panel = RichPanel.fit(f'$ archadept debug {container_id}', style=Color.EXTRA)
         renderables.append(RichAlign.center(debug_panel))
     renderables.append('Press \'Ctrl-a\' followed by \'x\' to end the simulation.\n' \
                        'QEMU is now controlling this terminal window until the simulation ends...')
-    getConsole().print(RichPanel.fit(RichGroup(*renderables), style='green'))
+    getConsole().print(RichPanel.fit(RichGroup(*renderables), style=Color.INFO))
 
 def main_run(image:str, tag:str, workdir:Path, spawn_gdbserver:bool) -> int:
     """ Main function for ``archadept run``.

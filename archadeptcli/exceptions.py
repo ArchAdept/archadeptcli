@@ -26,7 +26,7 @@ DEALINGS IN THE SOFTWARE.
 from typing import Optional
 
 # Local deps
-from .console import getConsole, RichAlign, RichGroup, RichPanel
+from .console import getConsole, RichAlign, RichGroup, RichPanel, Color
 
 
 class ArchAdeptWarning():
@@ -59,10 +59,10 @@ class ArchAdeptWarning():
             renderables += [f'{self.tip}\n']
         renderables += ['See https://archadept.com/help/warnings for more help with this warning.']
         console = getConsole()
-        console.print(RichPanel.fit(RichGroup(*renderables), style='yellow',
+        console.print(RichPanel.fit(RichGroup(*renderables), style=Color.WARNING,
                                     title=f'ArchAdept warning 0x{self.unique_id:04X}'))
         if not console.debug_enabled:
-            console.print(RichPanel.fit(f'Note: You can also rerun with `-v` for more verbose debug logging.', style='yellow'))
+            console.print(RichPanel.fit(f'Note: You can also rerun with `-v` for more verbose debug logging.', style=Color.WARNING))
 
 class ProjectRunSupportUnknown(ArchAdeptWarning):
     """ Flagged when we are unable to determine whether an example project
@@ -114,10 +114,10 @@ class ArchAdeptError(Exception):
         else:
             renderables += ['See https://archadept.com/help/errors for more help with this error.']
         console = getConsole()
-        console.print(RichPanel.fit(RichGroup(*renderables), style='red',
+        console.print(RichPanel.fit(RichGroup(*renderables), Color.ERROR,
                                     title=f'!!! ArchAdept error 0x{self.unique_id:04X} !!!'))
         if not console.debug_enabled:
-            console.print(RichPanel.fit(f'Note: You can also rerun with `-v` for more verbose debug logging.', style='red'))
+            console.print(RichPanel.fit(f'Note: You can also rerun with `-v` for more verbose debug logging.', style=Color.ERROR))
 
 class UngracefulExit(ArchAdeptError):
     """ Raised when we crash due to any kind of uncaught exception. """
