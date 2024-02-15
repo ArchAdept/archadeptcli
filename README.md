@@ -214,7 +214,6 @@ command-specific options:
   -i IMAGE      override Docker image repository (default: archadept/archadeptcli-backend)
   -t TAG        override Docker image tag (default: latest)
   -S            interleave source with disassembly (only available for 'dis' target)
-  -D            also disassemble any data found in code sections (only available for 'dis' target)
   -O {0,1,2,3}  override project's default optimization level
 
 command-specific positional arguments:
@@ -232,7 +231,6 @@ project Makefiles:
 
 Note: The `dis` target accepts the following optional flags:
  - `-S` enables interleaving source code with the disassembly.
- - `-D` enables disassembling any data found in code sections.
 
 
 ### `run`

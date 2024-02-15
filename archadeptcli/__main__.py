@@ -178,16 +178,6 @@ class CommandLineArgs():
                     },
                 },
                 {
-                    'arg': '-D',
-                    'top-level': False,
-                    'commands': ('make', ),
-                    'dict': {
-                        'dest': 'disassemble_data',
-                        'help': 'also disassemble any data found in code sections (only available for \'dis\' target)',
-                        'action': 'store_true',
-                    },
-                },
-                {
                     'arg': '-O',
                     'top-level': False,
                     'commands': ('make', ),
@@ -258,10 +248,8 @@ class CommandLineArgs():
             if self.target != 'dis':
                 if self.interleave:
                     parser.error('-S only available for Makefile target \'dis\'')
-                if self.disassemble_data:
-                    parser.error('-D only available for Makefile target \'dis\'')
 
-def main_make(image:str, tag:str, workdir:Path, target:str, optimize:Optional[int]=None, interleave:bool=False, disassemble_data:bool=False) -> int:
+def main_make(image:str, tag:str, workdir:Path, target:str, optimize:Optional[int]=None, interleave:bool=False) -> int:
     """ Main function for ``archadept make``.
 
     Parameters
@@ -279,9 +267,6 @@ def main_make(image:str, tag:str, workdir:Path, target:str, optimize:Optional[in
     interleave
         When ``target='dis'``, this enables interleaving of source code with
         the disassembly.
-    disassemble_data
-        When ``target='dis'``, this enables disassembling any data found in
-        code sections.
 
     Returns
     -------
@@ -294,8 +279,6 @@ def main_make(image:str, tag:str, workdir:Path, target:str, optimize:Optional[in
     if target == 'dis':
         if interleave:
             kwargs['INTERLEAVE'] = 1
-        if disassemble_data:
-            kwargs['DISASSEMBLE_DATA'] = 1
     result = DockerCLIWrapper().run(f'make {target}', image=image, tag=tag, host_workdir=workdir, env=kwargs)
     return result.returncode
 
@@ -470,8 +453,7 @@ def main():
     archadeptcli.console.init(debug=args.debug)
     try:
         if args.command == 'make':
-            return main_make(args.image, args.tag, args.workdir, args.target, optimize=args.optimize,
-                             interleave=args.interleave, disassemble_data=args.disassemble_data)
+            return main_make(args.image, args.tag, args.workdir, args.target, optimize=args.optimize, interleave=args.interleave)
         elif args.command == 'run':
             return main_run(args.image, args.tag, args.workdir, args.spawn_gdbserver)
         elif args.command == 'debug':
