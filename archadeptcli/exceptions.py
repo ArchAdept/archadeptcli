@@ -35,7 +35,7 @@ class ArchAdeptWarning():
     unique_id:int = 0x0400
     """ Unique ID of this warning class. """
 
-    tip:Optional[str] = None
+    tips:list[str] = []
     """ Additional help info that will be displayed for this warning. """
 
     def __init__(self, message:Optional[str]=None) -> None:
@@ -55,8 +55,8 @@ class ArchAdeptWarning():
         if self.message is not None:
             message += f': {self.message}{"." if self.message[-1] not in ".!?" else ""}'
         renderables = [f'{message}\n']
-        if self.tip is not None:
-            renderables += [f'{self.tip}\n']
+        for tip in self.tips + ['Attempting to continue anyway, but this may not work as expected.']:
+            renderables += [f'{tip}\n']
         renderables += ['See https://archadept.com/help/warnings for more help with this warning.']
         console = getConsole()
         console.print(RichPanel.fit(RichGroup(*renderables), style=Color.WARNING,
@@ -68,13 +68,17 @@ class ProjectRunSupportUnknown(ArchAdeptWarning):
     """ Flagged when we are unable to determine whether an example project
         supports being run on QEMU. """
     unique_id = 0x443
-    tip = 'Attempting to continue anyway, but this may not work as expected.'
 
 class ProjectDoesNotSupportRun(ArchAdeptWarning):
     """ Flagged when an example project's config file explicitly states
         that we do not support running that project on QEMU. """
     unique_id = 0x444
-    tip = 'Attempting to continue anyway, but this may not work as expected.'
+
+class CommandLineCharacters(ArchAdeptWarning):
+    """ Flagged when a command line appears to contain characters that
+        may not behave consistently across platforms. """
+    unique_id = 0x445
+    tips = ['These characters are not guaranteed to behave consistently across Windows vs UNIX.']
 
 class ArchAdeptError(Exception):
     """ Base class of all exceptions raised by the ArchAdept CLI. """
@@ -160,6 +164,7 @@ __all__ = [
     'ArchAdeptWarning',
     'ProjectRunSupportUnknown',
     'ProjectDoesNotSupportRun',
+    'CommandLineCharacters',
     'ArchAdeptError',
     'UngracefulExit',
     'InternalError',

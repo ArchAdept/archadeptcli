@@ -105,6 +105,8 @@ class DockerCLIWrapper():
         """
         full_command = f'{self.docker_cli_binary} {command}'.rstrip()
         getConsole().debug(RichPanel.fit(full_command, style=Color.DEBUG, title='invoking command...'))
+        if '\'' in full_command:
+            CommandLineCharacters(f'Docker command line invocation includes \'single quotes\'')
         # Spawn the subprocess with appropriate piping.
         output = None
         kwargs = {'text':True, 'encoding':'UTF-8'}

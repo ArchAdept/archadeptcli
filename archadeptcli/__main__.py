@@ -418,7 +418,7 @@ def main_debug(container_id:str) -> int:
     Shell exit status of the underlying LLDB invocation.
     """
     docker = DockerCLIWrapper()
-    lldb_command = 'lldb -Q --one-line \'gdb-remote localhost:1234\' build/out.elf'
+    lldb_command = 'lldb -Q --one-line "gdb-remote localhost:1234" build/out.elf'
     return docker.exec(container_id, lldb_command).returncode
 
 def main_pull(image:str, tag:str) -> int:
