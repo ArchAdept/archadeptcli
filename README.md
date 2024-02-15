@@ -33,12 +33,12 @@ the actual Docker containers themselves.
 
 Tested as working on:
 
-| Operating System  | x86_64 | arm64 |
-| ----------------- | ------ | ----- |
-| macOS Sonoma 14.1 | TODO   | 🟢    |
-| Windows 10        | TODO   | N/A   |
-| Windows 11        | TODO   | TODO  |
-| Ubuntu 22.04 LTS  | 🟢     | TODO  |
+| Operating System  | Version                    | x86_64 | arm64 |
+| ----------------- | -------------------------- | ------ | ----- |
+| Mac               | macOS Sonoma 14.1          | TODO   | 🟢    |
+| Windows 10        | Windows 10 Enterprise 22H2 | 🟢     | N/A   |
+| Windows 11        | TODO                       | TODO   | TODO  |
+| Linux             | Ubuntu 22.04 LTS           | 🟢     | TODO  |
 
 Skip to installation instructions for:
  * [macOS](#macos)
@@ -100,9 +100,8 @@ Skip to [usage](#usage).
 
 > [!WARNING]
 > We strongly recommend *not* using the Microsoft Store to install Python 3; please download and install from the official Python website.
-
-> [!WARNING]
-> During installation, please ensure you tick the checkbox to add Python to your `$PATH`.
+>
+> Furthermore, during installation, please ensure you tick the checkbox to add Python to your `$PATH`.
 
 3. Install `pipx` via `pip`:
 ```console
