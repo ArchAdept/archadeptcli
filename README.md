@@ -40,6 +40,13 @@ Tested as working on:
 | Windows 11        | TODO   | TODO  |
 | Ubuntu 22.04 LTS  | 🟢     | TODO  |
 
+Skip to installation instructions for:
+ * [macOS](#macos)
+ * [Windows](#windows)
+ * [Linux](#linux)
+
+Or skip to [usage](#usage).
+
 
 ### macOS
 
@@ -74,23 +81,28 @@ $ pipx install archadeptcli
 $ archadept --help
 ```
 
-8. Pull the latest ArchAdept CLI backend Docker image now, to speed up future invocations:
-```console
-$ archadept pull
-```
-
-9. To upgrade the ArchAdept CLI in future:
+8. To update the ArchAdept CLI in future:
 ```console
 $ pipx upgrade archadeptcli
 ```
+
+> [!TIP]
+> Run `archadept pull` now to download the backend Docker image ahead of time; this may take a few minutes to complete.
+
+Skip to [usage](#usage).
 
 
 ### Windows
 
 1. Install Docker Desktop by following the instructions at: https://www.docker.com/products/docker-desktop/
 
-2. Install Python 3.8 or newer either via the Microsoft Store or by downloading
-   and running the installer from: https://www.python.org/downloads/windows/
+2. Install Python 3.8 or newer from https://www.python.org/downloads/windows/
+
+> [!WARNING]
+> We strongly recommend *not* using the Microsoft Store to install Python 3; please download and install from the official Python website.
+
+> [!WARNING]
+> During installation, please ensure you tick the checkbox to add Python to your `$PATH`.
 
 3. Install `pipx` via `pip`:
 ```console
@@ -113,15 +125,15 @@ PS> py -3 -m pipx install archadeptcli
 PS> archadept --help
 ```
 
-7. Pull the latest ArchAdept CLI backend Docker image now, to speed up future invocations:
-```console
-PS> archadept pull
-```
-
-8. To upgrade the ArchAdept CLI in future:
+7. To update the ArchAdept CLI in future:
 ```console
 PS> py -3 -m pipx upgrade archadeptcli
 ```
+
+> [!TIP]
+> Run `archadept pull` now to download the backend Docker image ahead of time; this may take a few minutes to complete.
+
+Skip to [usage](#usage).
 
 
 ### Linux
@@ -162,24 +174,28 @@ $ python3 -m pipx install archadeptcli
 $ archadept --help
 ```
 
-8. Pull the latest ArchAdept CLI backend Docker image now, to speed up future invocations:
-```console
-$ archadept pull
-```
-
-9. To upgrade the ArchAdept CLI in future:
+8. To update the ArchAdept CLI in future:
 ```console
 $ python3 -m pipx upgrade archadeptcli
 ```
 
+> [!TIP]
+> Run `archadept pull` now to download the backend Docker image ahead of time; this may take a few minutes to complete.
+
+Skip to [usage](#usage).
+
+
 ## Usage
 
 The following commands are available:
- - `make`
- - `run`
- - `debug`
- - `pull`
- - `prune`
+
+| Command | Description                                                                |
+| ------- | -------------------------------------------------------------------------- |
+| `make`  | Invoke an ArchAdept project Makefile.                                      |
+| `run`   | Run an ArchAdept project on a QEMU simulation of real hardware.            |
+| `debug` | Attach debugger to an ArchAdept project running on a live QEMU simulation. |
+| `pull`  | Pull the latest backend Docker image.                                      |
+| `prune` | Cleanup any lingering Docker containers.                                   |
 
 
 ### `make`
@@ -210,9 +226,9 @@ project Makefiles:
  - `all` builds the project.
  - `clean` deletes all of a project's build artifacts.
  - `rebuild` performs a clean build, equivalent to `clean` followed by `all`.
- - `dis` builds the project, then disassembles it.
- - `syms` builds the project, then dumps its symbol table.
- - `sects` builds the project, then dumps its section headers.
+ - `dis` rebuilds the project, then disassembles it.
+ - `syms` rebuilds the project, then dumps its symbol table.
+ - `sects` rebuilds the project, then dumps its section headers.
 
 Note: The `dis` target accepts the following optional flags:
  - `-S` enables interleaving source code with the disassembly.
