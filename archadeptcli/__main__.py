@@ -70,7 +70,7 @@ class CommandLineArgs():
                     'command': 'debug',
                     'dict': {
                         'help': 'attach debugger to live simulation',
-                        'description': 'Attaches an LLDB debug session to a live QEMU simulation started by `archadept run`.',
+                        'description': 'Attaches an LLDB debug session to a live QEMU simulation started by `archadept run -s`.',
                     },
                 },
                 {

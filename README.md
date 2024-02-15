@@ -258,7 +258,7 @@ To quit the QEMU simulation, press `Ctrl-a` followed by `x`.
 ```console
 usage: archadept debug [-h] [-v] CONTAINER
 
-Attaches a GDB debug session to a live QEMU simulation started by `archadept run`.
+Attaches an LLDB debug session to a live QEMU simulation started by `archadept run -s`.
 
 options:
   -h, --help  show this help message and exit
