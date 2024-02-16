@@ -465,10 +465,10 @@ def main():
         else:
             raise InternalError(f'unimplemented function: main_{args.command}()')
     except ArchAdeptError as e:
+        e.render()
         if args.debug:
             raise e
         else:
-            e.render()
             return 1
     except Exception as e:
         raise UngracefulExit('crashed due to uncaught exception') from e
