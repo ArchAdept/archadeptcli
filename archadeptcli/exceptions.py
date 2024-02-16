@@ -118,7 +118,7 @@ class ArchAdeptError(Exception):
         else:
             renderables += ['See https://archadept.com/help/errors for more help with this error.']
         console = getConsole()
-        console.print(RichPanel.fit(RichGroup(*renderables), Color.ERROR,
+        console.print(RichPanel.fit(RichGroup(*renderables), style=Color.ERROR,
                                     title=f'!!! ArchAdept error 0x{self.unique_id:04X} !!!'))
         if not console.debug_enabled:
             console.print(RichPanel.fit(f'Note: You can also rerun with `-v` for more verbose debug logging.', style=Color.ERROR))
