@@ -40,15 +40,9 @@ Tested as working on:
 | Windows 11        | TODO                       | TODO   | TODO  |
 | Linux             | Ubuntu 22.04 LTS           | 🟢     | TODO  |
 
-Skip to installation instructions for:
- * [macOS](#macos)
- * [Windows](#windows)
- * [Linux](#linux)
-
-Or skip to [usage](#usage).
-
-
-### macOS
+Click to expand for your operating system:
+<details>
+<summary>macOS instructions</summary>
 
 1. Install Docker Desktop by following the instructions at: https://www.docker.com/products/docker-desktop/
 
@@ -89,10 +83,11 @@ $ pipx upgrade archadeptcli
 > [!TIP]
 > Run `archadept pull` now to download the backend Docker image ahead of time; this may take a few minutes to complete.
 
-Skip to [usage](#usage).
+Proceed to [usage](#usage).
+</details>
 
-
-### Windows
+<details>
+<summary>Windows instructions</summary>
 
 1. Install Docker Desktop by following the instructions at: https://www.docker.com/products/docker-desktop/
 
@@ -132,10 +127,11 @@ PS> py -3 -m pipx upgrade archadeptcli
 > [!TIP]
 > Run `archadept pull` now to download the backend Docker image ahead of time; this may take a few minutes to complete.
 
-Skip to [usage](#usage).
+Proceed to [usage](#usage).
+</details>
 
-
-### Linux
+<details>
+<summary>Linux instructions</summary>
 
 1. Install Docker Desktop by following the instructions at: https://www.docker.com/products/docker-desktop/
 
@@ -181,8 +177,8 @@ $ python3 -m pipx upgrade archadeptcli
 > [!TIP]
 > Run `archadept pull` now to download the backend Docker image ahead of time; this may take a few minutes to complete.
 
-Skip to [usage](#usage).
-
+Proceed to [usage](#usage).
+</details>
 
 ## Usage
 
