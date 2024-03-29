@@ -80,6 +80,10 @@ class CommandLineCharacters(ArchAdeptWarning):
     unique_id = 0x445
     tips = ['These characters are not guaranteed to behave consistently across Windows vs UNIX.']
 
+class FontNotFound(ArchAdeptWarning):
+    """ Flagged when we fail to find a font specified by the user. """
+    unique_id = 0x446
+
 class ArchAdeptError(Exception):
     """ Base class of all exceptions raised by the ArchAdept CLI. """
 
@@ -160,11 +164,27 @@ class DockerContainerError(ArchAdeptError):
     unique_id = 0xEDC5
     is_bug = False
 
+class BadDiagramValue(ArchAdeptError):
+    """ Raised when the user invokes ``archadept utility {opcode,register}``
+        and provides an invalid ``--value``. """
+    unique_id = 0xEAD1
+    is_bug = False
+    tip = '`--value` expects an expressable integer.'
+
+class BadDiagramField(ArchAdeptError):
+    """ Raised when the user invokes ``archadept utility {opcode,register}``
+        and an invalid ``--field``. """
+    unique_id = 0xEAD2
+    is_bug = False
+    tip = '`--field` should be in the form \'name[hi:lo]\', optionally suffixed with \'=value\'.'
+
+
 __all__ = [
     'ArchAdeptWarning',
     'ProjectRunSupportUnknown',
     'ProjectDoesNotSupportRun',
     'CommandLineCharacters',
+    'FontNotFound',
     'ArchAdeptError',
     'UngracefulExit',
     'InternalError',
@@ -173,5 +193,7 @@ __all__ = [
     'DockerServerError',
     'SimulationError',
     'DockerContainerError',
+    'BadDiagramValue',
+    'BadDiagramField',
 ]
 

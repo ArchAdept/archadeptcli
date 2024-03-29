@@ -11,6 +11,11 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.8"
 rich = "^13.7.0"
+bs4 = "^0.0.2"
+pillow = "^10.2.0"
+lxml = "^5.1.0"
+fuzzywuzzy = "^0.18.0"
+levenshtein = "^0.25.0"
 
 [tool.poetry.scripts]
 archadept = "archadeptcli.__main__:main"
