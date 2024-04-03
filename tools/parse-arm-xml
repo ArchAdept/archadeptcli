@@ -1,0 +1,494 @@
+#!/usr/bin/env python3
+# vim: syntax=python
+
+"""
+Copyright © 2024, ARCHADEPT LTD. All Rights Reserved.
+SPDX-License-Identifier: MIT
+
+This script parses the Arm Architecture System Register and A64 ISA XML
+descriptions [1] into a JSON format that can then be used by archadeptcli
+when rendering diagrams of those system registers or instructions.
+
+The intention is to run this script once every few months whenever Arm
+drop a new XML release, and the resulting JSON files are then committed
+to the `archadeptcli/static/` directory.
+
+[1] https://developer.arm.com/Architectures/A-Profile%20Architecture#Software-Download
+"""
+
+# Standard deps
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+from typing import Optional
+
+# Third-party deps
+from bs4 import BeautifulSoup
+
+gDEBUG = False
+""" Whether logging debug messages is enabled; set by `-d` on the command-line. """
+
+gNUM_ERRORS = 0
+""" Number of times ``error()`` has been called. """
+
+def debug(*msgs:object, **kwargs) -> None:
+    """ Log a debug message. """
+    global gDEBUG
+    if gDEBUG:
+        for msg in msgs:
+            print(msg, **kwargs)
+
+def error(*msgs:object, **kwargs) -> None:
+    """ Log an error message to ``stderr`` and incrememt the error counter by ``1``. """
+    for msg in msgs:
+        for ln in str(msg).splitlines():
+            print(f'error: {msg}', file=sys.stderr, **kwargs)
+    global gNUM_ERRORS
+    gNUM_ERRORS += 1
+
+class CommandLineArgs():
+    """ Class representing the arguments parsed from the command line. """
+
+    def __init__(self):
+        """ Parse command line arguments. """
+
+        parser = argparse.ArgumentParser()
+
+        parser.add_argument(
+            '-d', '--debug',
+            help='enable logging debug verbosity messages',
+            action='store_true',
+            default=False)
+
+        path_args = parser.add_argument_group('path arguments')
+
+        path_args.add_argument(
+            '--isa',
+            metavar='DIR',
+            help='path to the extracted A64 ISA XML archive (e.g. /path/to/ISA_A64_xml_A_profile-2024-03/)',
+            type=Path,
+            default=None)
+
+        path_args.add_argument(
+            '--sysreg',
+            metavar='DIR',
+            help='path to the extracted system register XML archive (e.g. /path/to/SysReg_xml_A_profile-2024-03/)',
+            type=Path,
+            default=None)
+
+        path_args.add_argument(
+            '--out',
+            metavar='DIR',
+            help='path to directory in which to store the resulting JSON files (default: $(pwd)/archadeptcli/static)',
+            type=Path,
+            default=Path.cwd() / 'archadeptcli' / 'static')
+
+        # Parse the args into this CommandLineArgs object.
+        self.parsed = {}
+        for k,v in vars(parser.parse_args()).items():
+            setattr(self, k, v)
+            self.parsed[k] = v
+
+        # Extra validation
+        if not any((self.isa, self.sysreg)):
+            parser.error('require at least one of `--isa` or `--sysreg`')
+
+    def dumps(self) -> str:
+        """ Return a summary of the parsed command-line arguments. """
+        s = 'command-line arguments:\n'
+        pad = max((len(k) for k in list(self.parsed.keys()))) + 1
+        for k,v in self.parsed.items():
+            if isinstance(v, str) or isinstance(v, Path):
+                v = f'"{str(v)}"'
+            s += f' {k:<{pad}s}=> {v}\n'
+        return s.rstrip()
+
+class RegDiagram():
+    """ Class representing a ``<regdiagram>`` element from the A64 ISA
+        XML descriptions, parsed out into JSON. """
+
+    @classmethod
+    def parse_all_files(cls, path:Path) -> dict:
+        """ Attempts to parse all ``<regdiagram>`` elements from all A64
+            ISA XML files in the given directory.
+
+        Parameters
+        ==========
+        path
+            Path to the directory containing the A64 ISA XML files.
+
+        Returns
+        =======
+        JSON dict describing all parsed diagrams.
+        """
+
+        def parse_file(path:Path) -> None:
+            """ Underlying implementation of ``parse_all_files()``. Attempts to
+                parse all ``<regdiagram>`` elements from a single A64 ISA XML file.
+
+            Parameters
+            ==========
+            path
+                Path to the A64 ISA XML file to parse.
+            """
+
+            def parse_diagram(path:Path, src:BeautifulSoup, title:str, iclass:str,
+                              arch_variant:Optional[str], instr_class:Optional[str]) -> bool:
+                """ Underlying implementation of ``parse_file()``. Attempts to
+                    parse a single ``<regdiagram>`` element.
+
+                Parameters
+                ==========
+                path
+                    Path to the A64 ISA XML file.
+                src
+                    The ``BeautifulSoup`` XML object corresponding to the
+                    ``<regdiagram>`` element being parsed.
+                title
+                    Title of the ``<instructionsection>`` element that this
+                    ``<regdiagram>`` element belongs to, for example 'MOV'.
+                iclass
+                    Name of the ``<iclass>`` element that this ``<regdiagram>``
+                    element belongs to, for example 'Integer'.
+                arch_variant
+                    Optionally the architecture variant of the ``<iclass>``
+                    element that this ``<regdiagram>`` element belongs to,
+                    with the leading `FEAT_` stripped. For example, if this
+                    ``<regdiagram>`` element belongs to an ``<iclass>``
+                    element with an ``<arch_variant feature="FEAT_FP8">``,
+                    then this should be "FP8".
+                instr_class
+                    Optionally the instruction class name of the ``<iclass>``
+                    element that this ``<regdiagram>`` element belongs to.
+                    For example, if the ``<iclass>`` element defines a
+                    ``<docvar key="instr-class" value="mortlach2">`` then
+                    this should be "mortlach2".
+
+                Returns
+                =======
+                Whether we successfully parsed the ``<regdiagram>`` element.
+                """
+                rd = RegDiagram()
+                rd.path = path
+                rd.src = src
+                rd.title = sanitize(title)
+                rd.iclass = sanitize(iclass)
+                if arch_variant is not None:
+                    arch_variant = sanitize(arch_variant)
+                rd.arch_variant = arch_variant if arch_variant != rd.iclass else None
+                if instr_class is not None:
+                    instr_class = sanitize(instr_class)
+                rd.instr_class = instr_class if instr_class != rd.iclass else None
+                rd.fields = []
+
+                try:
+                    boxes = src.find_all('box')
+                    if len(boxes) < 1:
+                        raise ValueError('no <box> elements')
+                    for box in boxes:
+                        hi = int(box['hibit'])
+                        width = int(box.get('width', 1))
+                        lo = hi - width + 1
+                        name = box.get('name', None)
+
+                        def die(msg) -> None:
+                            nonlocal hi, lo, name
+                            bits = f'{hi}:{lo}' if hi > lo else f'{lo}'
+                            raise ValueError(f'<regdiagram> field {name}[{bits}]: {msg}')
+
+                        value = ''
+                        columns = box.find_all('c')
+                        if columns:
+                            for c in columns:
+                                bits = c.text.strip()
+                                if not bits:
+                                    if value:
+                                        die('empty column with non-empty value')
+                                    else:
+                                        value = None
+                                        break
+                                for idx, b in enumerate(bits):
+                                    if b in ('1', '0'):
+                                        # Nothing special here, just append the bit as-is
+                                        value += b
+                                    elif b == 'x':
+                                        # We capitalize X-bits in our diagrams so as to
+                                        # disambiguate between e.g. '0x1' and '0X1',
+                                        # where the former is a hexadecimal one while
+                                        # the latter is a 3-bit value where bit [1] may
+                                        # be either a zero or a one.
+                                        value += 'X'
+                                    elif b == '(' and len(bits) == 3 and idx == 0 and bits[1] in ('1', '0') and bits[2] == ')':
+                                        # The Arm ARM sometimes wraps bit values in
+                                        # parenthesis e.g. '(1)' or '(0)'; we strip
+                                        # those out in our diagrams.
+                                        value += bits[1]
+                                        break
+                                    elif b == '!' and len(bits) > 3 and idx == 0 and bits[0:3] == '!= ' and name is not None:
+                                        # Some instruction fields have reserved values
+                                        # which are expressed as e.g. 'imm6 != 000000';
+                                        # in our diagrams we treat this entire string as
+                                        # the name of the field and treat the field as
+                                        # having no value.
+                                        name = f'{name} {bits}'
+                                        value = None
+                                        break
+                                    else:
+                                        # Oops, looks like we've encountered something
+                                        # new for which we don't yet have a suitable
+                                        # handler above.
+                                        die(f'unparsed bits "{bits}"')
+                        if value is not None and all((c in ('0', '1') for c in value)):
+                            value = f'0b{value}'
+                        rd.fields.append({
+                            'name': name,
+                            'hi': hi,
+                            'lo': lo,
+                            'value': value})
+                except ValueError as e:
+                    error(f'error parsing <regdiagram> element in file: {path}',
+                          f'<instructionsection title="{instructionsection["title"]}"',
+                          f'<iclass name="{iclass["name"]}">',
+                          f'{regdiagram}',
+                          f'</iclass>',
+                          f'</instructionsection>',
+                          e)
+                    return False
+                else:
+                    nonlocal by_title
+                    if rd.title not in by_title:
+                        by_title[rd.title] = []
+                    by_title[rd.title].append(rd)
+                    return True
+
+            debug(f'parsing file: {path}')
+            with open(path, 'r') as f:
+                data = f.read()
+            bs = BeautifulSoup(data, 'xml')
+            for instructionsection in bs.find_all('instructionsection'):
+                debug(f'found <instructionsection title="{instructionsection["title"]}">')
+                for iclass in instructionsection.find_all('iclass'):
+                    debug(f'found <iclass name="{iclass["name"]}">')
+                    arch_variant = None
+                    arch_variants = iclass.find_all('arch_variant')
+                    if len(arch_variants) == 1:
+                        arch_variant = arch_variants[0]['feature']
+                        if arch_variant.startswith('FEAT_'):
+                            arch_variant = arch_variant[len('FEAT_'):]
+                    instr_class = None
+                    for docvar in iclass.find_all('docvar'):
+                        if docvar['key'] == 'instr-class':
+                            instr_class = docvar['value']
+                            break
+                    regdiagrams = iclass.find_all('regdiagram')
+                    debug(f'found {len(regdiagrams)} <regdiagram> elements')
+                    for i, regdiagram in enumerate(regdiagrams):
+                        debug(f'parsing <regdiagram> {i+1}/{len(regdiagrams)}')
+                        nonlocal num_elements_encountered
+                        num_elements_encountered += 1
+                        if parse_diagram(path, regdiagram, instructionsection['title'], iclass['name'], arch_variant, instr_class):
+                            nonlocal num_elements_parsed
+                            num_elements_parsed += 1
+
+        def sanitize(s:str) -> str:
+            """ Sanitize the given string so that it can be used as the title
+                of an instruction; this means stripping out any invalid chars
+                and '-A64' suffix, and making it lower case. """
+            for c in ('(', ',', ')', ' ', '<', '>', '&', '.', '/', '_'):
+                s = s.replace(c, '-')
+            while '--' in s:
+                s = s.replace('--', '-')
+            if s.endswith('-'):
+                s = s[:-1]
+            s = s.lower()
+            if s.endswith('-a64'):
+                s = s[:-4]
+            return s
+
+        def finalize(by_title:dict[str, list['RegDiagram']]) -> dict[str, 'RegDiagram']:
+            """ Loop through all parsed ``RegDiagram`` objects looking for
+                any potential naming collisions, fixing those up to have
+                unique names.
+
+                For example, we may have many ``RegDiagram`` objects that
+                are registered against the 'add' instruction mnemonic, but
+                after executing this function these will have been
+                disambiguated to 'add-immediate', 'add-shifted-register',
+                'add-extended-register', and so on.
+
+            Parameters
+            ==========
+            by_title
+                Dict mapping instruction mnemonics to a list of ``RegDiagram``
+                objects registered to that mnemonic.
+
+            Returns
+            =======
+            Dict mapping unique instruction mnemonic variants to a single
+            ``RegDiagram`` object.
+            """
+
+            def handle_collision(rds:list['RegDiagram'], keys:list[str]) -> list['RegDiagram']:
+                """ Helper to handle naming collisions. Given a list of
+                    ``RegDiagram`` objects and a list of attribute keys,
+                    attempt to maximally disambiguate between them by
+                    appending the corresponding attributes.
+
+                Parameters
+                ==========
+                rds
+                    The ``RegDiagram`` objects to disambiguate.
+                keys
+                    The attribute keys that may be used to try to maximally
+                    disambiguate between the provided ``RegDiagram`` objects.
+
+                Returns
+                =======
+                List of ``RegDiagram`` objects that have been fully disambiguated
+                i.e. their ``title`` attribute has been set to a unique value.
+                """
+                debug(f'{len(rds)} collisions on "{rds[0].title}"')
+                debug(f'attempting to identify the best way to disambiguate...')
+                ret = []
+                num_values = {}
+                for key in keys:
+                    values = set((getattr(rd, key) for rd in rds))
+                    num_values[key] = len(values)
+                    debug(f'there are {num_values[key]} distinct values for {key}: {", ".join(map(lambda v: str(v), values))}')
+                best_choice = max(num_values, key=num_values.get)
+                debug(f'best choice is to use {best_choice}')
+                if num_values[best_choice] < len(rds):
+                    debug(f'however, this is *not* sufficient to fully disambiguate between all diagrams')
+                new_title_counts = {}
+                for rd in rds:
+                    rd.old_title = rd.title
+                    attr = getattr(rd, best_choice)
+                    if attr is not None:
+                        rd.title = sanitize(f'{rd.title}-{getattr(rd, best_choice)}')
+                    if rd.title not in new_title_counts:
+                        new_title_counts[rd.title] = 0
+                    new_title_counts[rd.title] += 1
+                for rd in rds:
+                    if new_title_counts[rd.title] == 1:
+                        extra_msg = '(unique)'
+                        ret.append(rd)
+                    else:
+                        extra_msg = '(not yet unique)'
+                    debug(f'"{rd.old_title}" => "{rd.title}" {extra_msg}')
+                return ret
+
+            ret = dict()
+            for title, rds in by_title.items():
+                if len(rds) == 1:
+                    # This title already maps onto a unique ``RegDiagram``
+                    # object; nothing further required.
+                    ret[title] = rds[0]
+                else:
+                    # This title maps onto several ``RegDiagram`` objects;
+                    # keep trying to append various attributes to the titles
+                    # of each ``RegDiagram`` object to make them unique.
+                    #
+                    # This is an iterative process and may require several
+                    # passes around the loop. Consider ``bfcvt``, which at
+                    # time of writing has 4 variants; after the first pass,
+                    # these will have been disambiguated to:
+                    #
+                    # ```
+                    # (1) bfcvt-sve
+                    # (2) bfcvt-single-precision-to-bfloat16
+                    # (3) bfcvt-sme2
+                    # (4) bfcvt-sme2
+                    # ```
+                    #
+                    # At this point we know that (1) and (2) are unique, so
+                    # they're added to ``ret``. However, (3) and (4) are not
+                    # yet fully disambiguated and will be subjected to a second
+                    # pass around the loop, at which point they will be:
+                    #
+                    # ```
+                    # (3) bfcvt-sme2
+                    # (4) bfcvt-sme2-fp8
+                    # ```
+                    #
+                    # Now (3) and (4) have been fully disambiguated, so can be
+                    # added to ``ret`` and we're done; onto the next instruction.
+                    key_set = ['iclass', 'arch_variant', 'instr_class']
+                    while key_set and rds:
+                        unique = handle_collision(rds, key_set)
+                        for rd in unique:
+                            ret[rd.title] = rd
+                            rds.remove(rd)
+                        key_set.pop(0)
+                    if rds:
+                        s = ''
+                        for rd in rds:
+                            s += f'{rd.title=} {rd.iclass=} {rd.arch_variant=} {rd.instr_class=} {rd.path=}\n'
+                        error(f'failed to fully disambiguate between the following instruction variants:', s)
+            return ret
+
+        num_files_encountered = 0
+        num_elements_encountered = 0
+        num_elements_parsed = 0
+        by_title = {}
+        for path in Path(path).glob('**/*.xml'):
+            # Skip any files that are not specific to one instruction
+            ignore = ('onebigfile.xml', 'encodingindex.xml', 'shared_pseudocode.xml')
+            if str(path.name) in ignore:
+                continue
+            num_files_encountered += 1
+            parse_file(path)
+        diagrams = finalize(by_title)
+        print(f'encountered {num_files_encountered} files')
+        print(f'successfully parsed {num_elements_parsed}/{num_elements_encountered} ``<regdiagram>`` elements')
+        print(f'finalized {len(diagrams)} ``RegDiagram`` objects')
+        global gNUM_ERRORS
+        print(f'encountered {gNUM_ERRORS} total errors')
+        ret = {}
+        for title in sorted(list(diagrams.keys())):
+            ret.update(diagrams[title].json())
+        return ret
+
+    def json(self) -> dict:
+        """ Convert this ``RegDiagram`` object into a JSON dict.
+
+        Returns
+        =======
+        JSON dict of the form:
+
+            "add-shifted-register": [
+                {
+                    "name": "sf",
+                    "hi": 31,
+                    "lo": 31,
+                    "value": None
+                },
+                {
+                    ...
+                }
+            ]
+
+        """
+        return { self.title: self.fields }
+
+def main():
+    # Parse command-line arguments and enable logging debug verbosity messages,
+    # if requested via `-d` or `--debug`.
+    args = CommandLineArgs()
+    global gDEBUG
+    gDEBUG = args.debug
+    debug(args.dumps())
+
+    # Parse A64 ISA XML, if requested.
+    if args.isa:
+        d = RegDiagram.parse_all_files(args.isa)
+        with open(Path(args.out) / 'instructions.json', 'w') as f:
+            json.dump(d, f, indent=2)
+
+    # Parse System Register XML, if requested.
+    if args.sysreg:
+        pass
+
+main()
+

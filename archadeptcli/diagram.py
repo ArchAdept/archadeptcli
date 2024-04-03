@@ -401,12 +401,12 @@ class Layout():
         #Done!
         return lines
 
-def prompt(prologue:str, choices:list[str]) -> Optional[str]:
-    print(f'{prologue}')
-    for idx, choice in enumerate(choices):
-        print(f' {idx+1:>2d}) {choice}')
-    selection = input(f'> ')
-    error_message = f'Invalid choice \'{{}}\', expected an integer in the range [0..{len(choices)}] exclusive.'
+def prompt(query:str, choices:list[str]) -> Optional[str]:
+    for idx, choice in enumerate(reversed(choices)):
+        suffix = '' if idx < len(choices)-1 else ' <-- this is the closest match'
+        print(f' {len(choices)-idx:>3d}) {choice}{suffix}')
+    selection = input(f'\n{query} > ')
+    error_message = f'Invalid choice \'{{}}\', expected an integer in the range [1..{len(choices)}] inclusive.'
     try:
         selection = int(selection) - 1
     except ValueError:
@@ -511,7 +511,7 @@ def main_diagram(opcode_not_register:bool, name:str, fields:list[str], split:int
             # plug out the strings.
             console.debug(f'fuzzy search got {len(scores)} results, prompting user to clarify...')
             choices = list((score[0] for score in scores))
-            chosen = prompt(f'Ambiguous {type_name} \'{name}\', please select from the following list:', choices)
+            chosen = prompt(f'Ambiguous {type_name} \'{name}\', please select from the list', choices)
         if chosen is not None:
             name = chosen
             fields = d[chosen]
