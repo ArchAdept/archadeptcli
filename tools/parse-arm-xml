@@ -443,8 +443,6 @@ class RegDiagram():
         print(f'encountered {num_files_encountered} files')
         print(f'successfully parsed {num_elements_parsed}/{num_elements_encountered} ``<regdiagram>`` elements')
         print(f'finalized {len(diagrams)} ``RegDiagram`` objects')
-        global gNUM_ERRORS
-        print(f'encountered {gNUM_ERRORS} total errors')
         ret = {}
         for title in sorted(list(diagrams.keys())):
             ret.update(diagrams[title].json())
@@ -472,6 +470,86 @@ class RegDiagram():
         """
         return { self.title: self.fields }
 
+class Register():
+    """ Class representing a ``<register>`` element from the Arm System
+        Register XML descriptions, parsed out into JSON. """
+
+    @classmethod
+    def parse_all_files(cls, path:Path) -> dict:
+        """ Attempts to parse all ``<register>`` elements from all Arm
+            System Register XML files in the given directory.
+
+        Parameters
+        ==========
+        path
+            Path to the directory containing the System Register XML files.
+
+        Returns
+        =======
+        JSON dict describing all parsed system register diagrams.
+        """
+
+        def parse_file(path:Path) -> None:
+            """ Underlying implementation of ``parse_all_files()``. Attempts
+                to parse all ``<register>`` elements from a single System
+                Register XML file.
+
+            Parameters
+            ==========
+            path
+                Path to the System Register XML file to parse.
+            """
+            debug(f'parsing file: {path}')
+            with open(path, 'r') as f:
+                data = f.read()
+            bs = BeautifulSoup(data, 'xml')
+            for register in bs.find_all('register'):
+                short_name = register.find_all('reg_short_name')[0].string.lower()
+                debug(f'found <register> element: {short_name}')
+                if register['is_register'] == 'False':
+                    debug('is_register=False, skipping')
+                    continue
+                nonlocal num_elements_encountered
+                num_elements_encountered += 1
+                
+                field_sets = register.find_all('reg_fieldsets')[0].find_all('fields', recursive=False)
+                if len(field_sets) > 1:
+                    debug(f'multiple <fields> elements within top-level <reg_fieldsets> element; skipping as not yet supported')
+                    continue
+                if field_sets[0].find_all('partial_fieldset'):
+                    debug(f'this <fields> element comprises one or more <partial_fieldset> elements; skipping as not yet supported')
+                    continue
+
+        def finalize(by_title:dict[str, list['Register']]) -> dict[str, 'Register']:
+            return {}
+
+        num_files_encountered = 0
+        num_elements_encountered = 0
+        num_elements_parsed = 0
+        num_elements_with_multiple_field_sets = 0
+        by_title = {}
+        ignore = (
+            'ext_alpha_index.xml', 'ext_enc_index.xml', 'func_index.xml',
+            'instructions.xml', 'notice.xml', 'pmu.xml', 'amu.xml',
+            'AArch64-s3_op1_cn_cm_op2.xml', 'AArch64-s1_op1_cn_cm_op2.xml',
+            'AArch64-regindex.xml', 'AArch32-regindex.xml'
+        )
+        for path in Path(path).glob('**/*.xml'):
+            # Skip any files that are not specific to one system register
+            if str(path.name) in ignore:
+                continue
+            num_files_encountered += 1
+            parse_file(path)
+        print(f'there are {num_elements_with_multiple_field_sets=}')
+        #diagrams = finalize(by_title)
+        #print(f'encountered {num_files_encountered} files')
+        #print(f'successfully parsed {num_elements_parsed}/{num_elements_encountered} ``<register>`` elements')
+        #print(f'finalized {len(diagrams)} ``Register`` objects')
+        #ret = {}
+        #for title in sorted(list(diagrams.keys())):
+        #    ret.update(diagrams[title].json())
+        #return ret
+
 def main():
     # Parse command-line arguments and enable logging debug verbosity messages,
     # if requested via `-d` or `--debug`.
@@ -488,7 +566,11 @@ def main():
 
     # Parse System Register XML, if requested.
     if args.sysreg:
-        pass
+        d = Register.parse_all_files(args.sysreg)
+
+    # Done!
+    global gNUM_ERRORS
+    print(f'encountered {gNUM_ERRORS} total errors')
 
 main()
 
